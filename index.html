@@ -3,16 +3,40 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="Estilos" href="style.css">
+  <link rel="Estilos" href="/style.css">
   <title>Document</title>
 </head>
 <body>
+  <div class="container">
+      <h1>Venta de Alcohol</h1>
+      <form id="purchase-form">
+          <label for="nombre">Nombre:</label>
+          <input type="text" id="nombre" required>
+          <label for="edad">Edad:</label>
+          <input type="number" id="edad" required>
+          <label for="producto">Producto:</label>
+          <select id="producto">
+              <option value="cerveza">Cerveza</option>
+              <option value="vino">Vino</option>
+              <option value="fernet">Fernet</option>
+              <option value="vodka">Vodka</option>
+              <option value="gancia">Gancia</option>
+              <option value="ron">Ron</option>
+              <option value="whisky">Whisky</option>
+          </select>
+          <button type="submit">Agregar al Carrito</button>
+      </form>
+      <div id="cart" class="hidden">
+          <h2>Carrito de Compras</h2>
+          <ul id="cart-items"></ul>
+          <p>Total: $<span id="total"></span></p>
+          <button id="checkout">Realizar Compra</button>
+      </div>
+      <div id="result" class="hidden"></div>
+  </div>
 
-  <h1> Java Primera Entrega</h1>
-  <button onclick="realizarCompra()">Realizar Compra</button>
-  <script src="js/main.js"></script>
+  <script src="/js/main.js"></script>
 </body>
 <footer>
-
 </footer>
 </html>
