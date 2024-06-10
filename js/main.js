@@ -23,7 +23,7 @@ const productos = {
         nombre: "Vino",
         precio: 800
     },
-    licor: {
+    fernet: {
         nombre: "Fernet",
         precio: 1500
     },
@@ -45,22 +45,15 @@ const productos = {
     }
 };
 
-// Arrays y métodos de búsqueda y filtrado sobre el Array:
-const productosDisponibles = Object.keys(productos);
-
-function productoDisponible(producto) {
-    return productosDisponibles.includes(producto);
-}
-
 // Funciones esenciales del proceso a simular:
-document.getElementById('purchase-form').addEventListener('submit', function(event) {
-    event.preventDefault();
-    agregarAlCarrito();
-});
 
 function capturarEntradas() {
     nombreCliente = document.getElementById('nombre').value;
     edadCliente = parseInt(document.getElementById('edad').value);
+    if (validarEntrada()) {
+        document.getElementById('cliente-form').classList.add('hidden');
+        alert(`Bienvenido, ${nombreCliente}! Ahora puedes agregar productos a tu carrito.`);
+    }
 }
 
 function validarEntrada() {
@@ -68,19 +61,48 @@ function validarEntrada() {
         alert("Por favor, ingrese un nombre válido y una edad válida.");
         return false;
     }
+    if (edadCliente < 18) {
+        alert("Debe ser mayor de edad para comprar alcohol.");
+        return false;
+    }
     return true;
 }
 
-function agregarAlCarrito() {
-    capturarEntradas();
-    if (validarEntrada()) {
-        const productoSeleccionado = document.getElementById('producto').value;
-        if (productoDisponible(productoSeleccionado)) {
-            productosEnCarrito.push(productoSeleccionado);
+// Función ficticia para simular una llamada asincrónica de verificación de inventario
+function verificarInventario(producto) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            // Simulamos que siempre hay inventario disponible
+            resolve(true);
+        }, 1000); // Simulamos una espera de 1 segundo
+    });
+}
+
+async function agregarProducto(producto) {
+    if (!nombreCliente || !edadCliente) {
+        alert("Por favor, ingrese su nombre y edad antes de agregar productos al carrito.");
+        return;
+    }
+
+    const cantidad = parseInt(document.getElementById(`cantidad-${producto}`).value);
+    if (isNaN(cantidad) || cantidad <= 0) {
+        alert("Por favor, ingrese una cantidad válida.");
+        return;
+    }
+
+    try {
+        const inventarioDisponible = await verificarInventario(producto);
+        if (inventarioDisponible) {
+            for (let i = 0; i < cantidad; i++) {
+                productosEnCarrito.push(producto);
+            }
             actualizarCarrito();
         } else {
-            alert("El producto seleccionado no está disponible.");
+            alert("Lo sentimos, no hay suficiente inventario disponible.");
         }
+    } catch (error) {
+        console.error("Error al verificar el inventario:", error);
+        alert("Ocurrió un error al verificar el inventario. Por favor, intente de nuevo más tarde.");
     }
 }
 
@@ -89,10 +111,11 @@ function actualizarCarrito() {
     cartItems.innerHTML = '';
     productosEnCarrito.forEach((producto, index) => {
         const li = document.createElement('li');
-        li.textContent = productos[producto].nombre;
+        li.textContent = `${productos[producto].nombre} - $${productos[producto].precio}`;
 
         // Agregar botón de eliminar
         const btnEliminar = document.createElement('button');
+        btnEliminar.className = "btn btn-danger btn-sm ms-2";
         btnEliminar.textContent = 'Eliminar';
         btnEliminar.addEventListener('click', function() {
             eliminarProductoDelCarrito(index);
@@ -107,7 +130,6 @@ function actualizarCarrito() {
     guardarEnLocalStorage();
 }
 
-// Función para eliminar un producto del carrito
 function eliminarProductoDelCarrito(index) {
     productosEnCarrito.splice(index, 1);
     actualizarCarrito();
@@ -134,7 +156,6 @@ function realizarCompra() {
     }
     const confirmarCompra = confirm(`¿Desea confirmar la compra por un total de $${totalCompra.toFixed(2)}?`);
     if (confirmarCompra) {
-        // Aquí puedes agregar la lógica para finalizar la compra, por ejemplo, enviar los datos al servidor.
         mostrarResultado();
         reiniciarCompra();
     }
@@ -156,17 +177,14 @@ function reiniciarCompra() {
     document.getElementById('producto').selectedIndex = 0;
     document.getElementById('cart').classList.add('hidden');
     document.getElementById('result').classList.add('hidden');
-    // Limpiar localStorage al reiniciar la compra
     limpiarLocalStorage();
 }
 
-// Función para guardar datos en localStorage
 function guardarEnLocalStorage() {
     localStorage.setItem('productosEnCarrito', JSON.stringify(productosEnCarrito));
     localStorage.setItem('totalCompra', totalCompra.toFixed(2));
 }
 
-// Función para limpiar datos de localStorage
 function limpiarLocalStorage() {
     localStorage.removeItem('productosEnCarrito');
     localStorage.removeItem('totalCompra');
