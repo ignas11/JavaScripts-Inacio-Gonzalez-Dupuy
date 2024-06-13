@@ -3,6 +3,7 @@ let nombreCliente;
 let edadCliente;
 let productosEnCarrito = [];
 let totalCompra = 0;
+let productos = {}; // Inicialmente vacío, se llenará con datos del JSON
 
 // Cargar datos del localStorage al cargar la página
 window.addEventListener('load', function() {
@@ -11,42 +12,45 @@ window.addEventListener('load', function() {
         totalCompra = parseFloat(localStorage.getItem('totalCompra'));
         actualizarCarrito();
     }
+    cargarProductos();
 });
 
-// Objetos de JS:
-const productos = {
-    cerveza: {
-        nombre: "Cerveza",
-        precio: 2500
-    },
-    vino: {
-        nombre: "Vino",
-        precio: 800
-    },
-    fernet: {
-        nombre: "Fernet",
-        precio: 1500
-    },
-    vodka: {
-        nombre: "Vodka",
-        precio: 2000
-    },
-    gancia: {
-        nombre: "Gancia",
-        precio: 1200
-    },
-    ron: {
-        nombre: "Ron",
-        precio: 1800
-    },
-    whisky: {
-        nombre: "Whisky",
-        precio: 2500
-    }
-};
+// Función para cargar productos desde el archivo JSON
+function cargarProductos() {
+    fetch('/productos.json')
+        .then(response => response.json())
+        .then(data => {
+            productos = data.productos.reduce((acc, producto) => {
+                acc[producto.id] = producto;
+                return acc;
+            }, {});
+            mostrarProductos();
+        })
+        .catch(error => console.error('Error al cargar productos:', error));
+}
+
+// Función para mostrar los productos en la página
+function mostrarProductos() {
+    const productsContainer = document.getElementById('products-container');
+    productsContainer.innerHTML = '';
+    Object.values(productos).forEach(producto => {
+        const productCard = `
+            <div class="col-lg-3 col-md-4 col-sm-6 card-container">
+                <div class="card">
+                    <img src="${producto.imagen}" class="card-img-top img-bebidas" alt="${producto.nombre}">
+                    <div class="card-body">
+                        <h5 class="card-title">${producto.nombre}</h5>
+                        <p class="card-text">Precio: $${producto.precio}</p>
+                        <input type="number" class="form-control mb-2" id="cantidad-${producto.id}" placeholder="Cantidad">
+                        <button class="btn btn-primary" onclick="agregarProducto('${producto.id}')">Agregar al Carrito</button>
+                    </div>
+                </div>
+            </div>`;
+        productsContainer.insertAdjacentHTML('beforeend', productCard);
+    });
+}
 
 // Funciones esenciales del proceso a simular:
-
 function capturarEntradas() {
     nombreCliente = document.getElementById('nombre').value;
     edadCliente = parseInt(document.getElementById('edad').value);
@@ -68,124 +72,79 @@ function validarEntrada() {
     return true;
 }
 
-// Función ficticia para simular una llamada asincrónica de verificación de inventario
-function verificarInventario(producto) {
-    return new Promise((resolve, reject) => {
+// Ejemplo de uso de Luxon (manejo de fechas)
+const DateTime = luxon.DateTime;
+const ahora = DateTime.now();
+console.log("Fecha y hora actual:", ahora.toString());
+
+// Simulación de inventario
+function verificarInventario(productoId) {
+    return new Promise((resolve) => {
         setTimeout(() => {
-            // Simulamos que siempre hay inventario disponible
+            // Suponemos que siempre hay inventario suficiente para simplificar
             resolve(true);
-        }, 1000); // Simulamos una espera de 1 segundo
+        }, 500);
     });
 }
 
+// Función para agregar productos al carrito
 async function agregarProducto(producto) {
-    if (!nombreCliente || !edadCliente) {
-        alert("Por favor, ingrese su nombre y edad antes de agregar productos al carrito.");
-        return;
-    }
-
     const cantidad = parseInt(document.getElementById(`cantidad-${producto}`).value);
     if (isNaN(cantidad) || cantidad <= 0) {
         alert("Por favor, ingrese una cantidad válida.");
         return;
     }
 
-    try {
-        const inventarioDisponible = await verificarInventario(producto);
-        if (inventarioDisponible) {
-            for (let i = 0; i < cantidad; i++) {
-                productosEnCarrito.push(producto);
-            }
-            actualizarCarrito();
-        } else {
-            alert("Lo sentimos, no hay suficiente inventario disponible.");
-        }
-    } catch (error) {
-        console.error("Error al verificar el inventario:", error);
-        alert("Ocurrió un error al verificar el inventario. Por favor, intente de nuevo más tarde.");
+    const hayInventario = await verificarInventario(producto);
+    if (hayInventario) {
+        const productoObj = productos[producto];
+        productosEnCarrito.push({ ...productoObj, cantidad });
+        totalCompra += productoObj.precio * cantidad;
+        actualizarCarrito();
+        guardarDatos();
+    } else {
+        alert(`Lo sentimos, no tenemos suficiente inventario de ${producto}.`);
     }
 }
 
 function actualizarCarrito() {
     const cartItems = document.getElementById('cart-items');
+    const cart = document.getElementById('cart');
+    const total = document.getElementById('total');
     cartItems.innerHTML = '';
-    productosEnCarrito.forEach((producto, index) => {
-        const li = document.createElement('li');
-        li.textContent = `${productos[producto].nombre} - $${productos[producto].precio}`;
-
-        // Agregar botón de eliminar
-        const btnEliminar = document.createElement('button');
-        btnEliminar.className = "btn btn-danger btn-sm ms-2";
-        btnEliminar.textContent = 'Eliminar';
-        btnEliminar.addEventListener('click', function() {
-            eliminarProductoDelCarrito(index);
-        });
-
-        li.appendChild(btnEliminar);
-        cartItems.appendChild(li);
+    productosEnCarrito.forEach(item => {
+        const cartItem = document.createElement('li');
+        cartItem.textContent = `${item.nombre} - Cantidad: ${item.cantidad} - Precio: $${item.precio * item.cantidad}`;
+        cartItems.appendChild(cartItem);
     });
-    calcularTotalCompra();
-    mostrarCarrito();
-    // Guardar datos en localStorage
-    guardarEnLocalStorage();
+    total.textContent = totalCompra.toFixed(2);
+    cart.classList.remove('hidden');
 }
 
-function eliminarProductoDelCarrito(index) {
-    productosEnCarrito.splice(index, 1);
-    actualizarCarrito();
-}
-
-function calcularTotalCompra() {
-    totalCompra = productosEnCarrito.reduce((total, producto) => total + productos[producto].precio, 0);
-}
-
-function mostrarCarrito() {
-    const cartDiv = document.getElementById('cart');
-    cartDiv.classList.remove('hidden');
-    document.getElementById('total').textContent = totalCompra.toFixed(2);
-}
-
-document.getElementById('checkout').addEventListener('click', function() {
-    realizarCompra();
-});
-
-function realizarCompra() {
-    if (productosEnCarrito.length === 0) {
-        alert("No hay productos en el carrito.");
-        return;
-    }
-    const confirmarCompra = confirm(`¿Desea confirmar la compra por un total de $${totalCompra.toFixed(2)}?`);
-    if (confirmarCompra) {
-        mostrarResultado();
-        reiniciarCompra();
-    }
-}
-
-function mostrarResultado() {
-    const resultDiv = document.getElementById('result');
-    resultDiv.textContent = `¡Gracias por tu compra, ${nombreCliente}! El total es: $${totalCompra.toFixed(2)}.`;
-    resultDiv.classList.remove('hidden');
-}
-
-function reiniciarCompra() {
-    nombreCliente = '';
-    edadCliente = 0;
-    productosEnCarrito = [];
-    totalCompra = 0;
-    document.getElementById('nombre').value = '';
-    document.getElementById('edad').value = '';
-    document.getElementById('producto').selectedIndex = 0;
-    document.getElementById('cart').classList.add('hidden');
-    document.getElementById('result').classList.add('hidden');
-    limpiarLocalStorage();
-}
-
-function guardarEnLocalStorage() {
+function guardarDatos() {
     localStorage.setItem('productosEnCarrito', JSON.stringify(productosEnCarrito));
     localStorage.setItem('totalCompra', totalCompra.toFixed(2));
 }
 
-function limpiarLocalStorage() {
-    localStorage.removeItem('productosEnCarrito');
-    localStorage.removeItem('totalCompra');
-}
+// Evento para el botón de realizar compra
+document.getElementById('checkout').addEventListener('click', function() {
+    if (productosEnCarrito.length === 0) {
+        alert("El carrito está vacío.");
+        return;
+    }
+
+    // Verificar que los productos estén en inventario
+    Promise.all(productosEnCarrito.map(item => verificarInventario(item.id)))
+        .then(results => {
+            if (results.every(hayInventario => hayInventario)) {
+                alert(`Compra realizada con éxito. Total: $${totalCompra.toFixed(2)}`);
+                productosEnCarrito = [];
+                totalCompra = 0;
+                actualizarCarrito();
+                guardarDatos();
+            } else {
+                alert("Uno o más productos no tienen suficiente inventario.");
+            }
+        })
+        .catch(error => console.error('Error en la verificación de inventario:', error));
+});
