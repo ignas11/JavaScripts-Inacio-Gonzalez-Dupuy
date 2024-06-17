@@ -6,7 +6,7 @@ let totalCompra = 0;
 let productos = {}; // Inicialmente vacío, se llenará con datos del JSON
 
 // Cargar datos del localStorage al cargar la página
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
     if (localStorage.getItem('productosEnCarrito')) {
         productosEnCarrito = JSON.parse(localStorage.getItem('productosEnCarrito'));
         totalCompra = parseFloat(localStorage.getItem('totalCompra'));
@@ -17,23 +17,19 @@ window.addEventListener('load', function() {
 
 // Función para cargar productos desde el archivo JSON
 function cargarProductos() {
-    fetch('/productos.json')
+    fetch('./productos.json')
         .then(response => response.json())
         .then(data => {
-            productos = data.productos.reduce((acc, producto) => {
-                acc[producto.id] = producto;
-                return acc;
-            }, {});
-            mostrarProductos();
+            productos = data.productos; // Ajusta esta línea según la estructura de tu JSON
+            mostrarProductos(productos);
         })
         .catch(error => console.error('Error al cargar productos:', error));
 }
-
 // Función para mostrar los productos en la página
-function mostrarProductos() {
+function mostrarProductos(data) {
     const productsContainer = document.getElementById('products-container');
     productsContainer.innerHTML = '';
-    Object.values(productos).forEach(producto => {
+    data.forEach(producto => {
         const productCard = `
             <div class="col-lg-3 col-md-4 col-sm-6 card-container">
                 <div class="card">
@@ -49,6 +45,7 @@ function mostrarProductos() {
         productsContainer.insertAdjacentHTML('beforeend', productCard);
     });
 }
+
 
 // Funciones esenciales del proceso a simular:
 function capturarEntradas() {
@@ -88,22 +85,27 @@ function verificarInventario(productoId) {
 }
 
 // Función para agregar productos al carrito
-async function agregarProducto(producto) {
-    const cantidad = parseInt(document.getElementById(`cantidad-${producto}`).value);
+async function agregarProducto(productoId) {
+    const cantidad = parseInt(document.getElementById(`cantidad-${productoId}`).value);
     if (isNaN(cantidad) || cantidad <= 0) {
         alert("Por favor, ingrese una cantidad válida.");
         return;
     }
 
-    const hayInventario = await verificarInventario(producto);
+    const producto = productos.find(p => p.id === productoId); // Obtener el producto del array
+    if (!producto) {
+        alert("Producto no encontrado.");
+        return;
+    }
+
+    const hayInventario = await verificarInventario(productoId);
     if (hayInventario) {
-        const productoObj = productos[producto];
-        productosEnCarrito.push({ ...productoObj, cantidad });
-        totalCompra += productoObj.precio * cantidad;
+        productosEnCarrito.push({ ...producto, cantidad });
+        totalCompra += producto.precio * cantidad;
         actualizarCarrito();
         guardarDatos();
     } else {
-        alert(`Lo sentimos, no tenemos suficiente inventario de ${producto}.`);
+        alert(`Lo sentimos, no tenemos suficiente inventario de ${producto.nombre}.`);
     }
 }
 
@@ -127,7 +129,7 @@ function guardarDatos() {
 }
 
 // Evento para el botón de realizar compra
-document.getElementById('checkout').addEventListener('click', function() {
+document.getElementById('checkout').addEventListener('click', function () {
     if (productosEnCarrito.length === 0) {
         alert("El carrito está vacío.");
         return;
