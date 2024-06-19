@@ -1,47 +1,26 @@
-{ 
-  "productos":
  [
-    {
+  {
       "id": "1",
-      "nombre": "Producto 1",
-      "precio": 2500,
-      "imagen": "https://www.abarrot.com/image/cache/catalog/productos/Cervezas%20Artesanales/imagen_2021-01-31_171543-259x259.png"
-    },
-    {
+      "nombre": "Cerveza",
+      "precio": 100,
+      "imagen": "https://via.placeholder.com/150"
+  },
+  {
       "id": "2",
-      "nombre": "Producto 2",
-      "precio": 800,
-      "imagen": "https://nordenwine.com/wp-content/uploads/2014/12/canada-wine-003-259x259.jpg"
-    },
-    {
+      "nombre": "Vino",
+      "precio": 200,
+      "imagen": "https://via.placeholder.com/150"
+  },
+  {
       "id": "3",
-      "nombre": "Producto 3",
-      "precio": 1500,
-      "imagen": "/Fotos/fernet.jpg"
-    },
-    {
+      "nombre": "Whisky",
+      "precio": 500,
+      "imagen": "https://via.placeholder.com/150"
+  },
+  {
       "id": "4",
-      "nombre": "Producto 4",
-      "precio": 2000,
-      "imagen": "/Fotos/vodka.jpg"
-    },
-    {
-      "id": "5",
-      "nombre": "Producto 5",
-      "precio": 1200,
-      "imagen": "https://acdn.mitiendanube.com/stores/001/163/250/products/americano-gancia1-53960ba248115ec0ad15381605007701-1024-10241-4d8bf2642611f13c6115881115317304-480-0.jpg"
-    },
-    {
-      "id": "6",
-      "nombre": "Producto 6",
-      "precio": 1800,
-      "imagen": "/Fotos/ron.jpg"
-    },
-    {
-      "id": "7",
-      "nombre": "Producto 7",
-      "precio": 2500,
-      "imagen": "https://www.viniaurbana.com.ar/wp-content/uploads/2023/01/whisky-johnnie-walker-blue-label-x-750-21-anos-d_nq_np_697524-mla26847021072_022018-f1-61987f6e7c7930577f15707350986781-640-0-260x260.jpg"
-    }
-  ]
-}
+      "nombre": "Ron",
+      "precio": 300,
+      "imagen": "https://via.placeholder.com/150"
+  }
+]
